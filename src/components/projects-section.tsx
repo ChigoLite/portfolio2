@@ -166,7 +166,7 @@ export default function ProjectsSection() {
                     ))}
                   </div>
                 </div>
-                <div className="px-6 pb-6 pt-0 flex justify-between sm:px-2">
+                <div className=" flex justify-between ">
                   <div>
                     <button
                       className="btn bg-blue-600 "
