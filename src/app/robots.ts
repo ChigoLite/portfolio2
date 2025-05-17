@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://ninetalenttech.com/sitemap.xml",
+    sitemap: "https://chigolite.vercel.app/sitemap.xml",
   }
 }
