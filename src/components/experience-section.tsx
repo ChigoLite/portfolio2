@@ -21,7 +21,7 @@ export default function ExperienceSection() {
     {
       title: "Senior MERN Stack Developer",
       company: "NineTalent.ng.",
-      period: "2022 - Present",
+      period: "2023 - 2024",
       description:
         "Leading the development of enterprise-level web applications. Architecting scalable solutions and mentoring junior developers. Implementing best practices and modern development workflows.",
       technologies: [
@@ -37,7 +37,7 @@ export default function ExperienceSection() {
     {
       title: "Backend Developer",
       company: "Enugu State Tech Hub.",
-      period: "2020 - 2022",
+      period: "2022 - 2023",
       description:
         "Developed and maintained multiple client projects. Collaborated with cross-functional teams to deliver high-quality web applications. implemented scalable RESTful APIs that powered the core functionalities of various applications and optimized application performance.",
       technologies: ["Node.js", "MongoDB", "Express", "GraphQL", "SpringBoot"],
@@ -45,7 +45,7 @@ export default function ExperienceSection() {
     {
       title: "Frontend Developer",
       company: "Freelancer",
-      period: "2019 - 2020",
+      period: "2019 - present",
       description:
         "Created responsive and interactive user interfaces for various client websites. Worked closely with designers to implement pixel-perfect designs. Optimized website performance and accessibility.",
       technologies: [
@@ -75,8 +75,9 @@ export default function ExperienceSection() {
           className="text-center mb-12"
         >
           <p className="max-w-2xl mx-auto text-muted-foreground">
-            With over 4 years of professional experience, I've worked on a
-            variety of projects across different industries and technologies.
+            With over 4 years of professional experience, I've worked as an
+            Intern over variety of projects across different industries and
+            technologies.
           </p>
         </motion.div>
 
