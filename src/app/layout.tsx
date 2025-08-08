@@ -9,9 +9,33 @@ import Footer from "@/components/footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ChigoLite | MERN Stack Developer",
+  title: "ChigoLite - MERN Stack Developer",
   description:
-    "Professional portfolio of ChigoLite, a MERN stack developer with over 4 years of experience",
+    "Portfolio of ChigoLite, a full-stack developer with 4+ years of MERN expertise, delivering scalable, user-centric solutions.",
+  keywords: [
+    "MERN",
+    "full-stack",
+    "React",
+    "Node.js",
+    "portfolio",
+    "developer",
+  ],
+  openGraph: {
+    title: "ChigoLite - MERN Stack Developer",
+    description:
+      "Explore ChigoLite's portfolio showcasing full-stack development with React, Node.js, MongoDB, and DevOps.",
+    url: "https://chigolite.vercel.app",
+    siteName: "ChigoLite Portfolio",
+    images: [{ url: "https://chigolite.vercel.app/bob.jpeg" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ChigoLite - MERN Stack Developer",
+    description:
+      "Discover ChigoLite's full-stack development portfolio with MERN expertise.",
+    images: ["https://chigolite.vercel.app/bob.jpeg"],
+  },
 };
 export default function RootLayout({
   children,
@@ -20,12 +44,45 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-theme="pink" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Person",
+              name: "ChigoLite",
+              jobTitle: "MERN Stack Developer",
+              url: "https://chigolite.vercel.app",
+              sameAs: [
+                "https://github.com/ChigoLite",
+                "https://www.linkedin.com/in/aka-cornelius-489835252",
+              ],
+              description:
+                "Full-stack developer with 4+ years of MERN expertise, delivering scalable, user-centric solutions.",
+            }),
+          }}
+        />
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=YOUR-GA-ID"
+        ></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'YOUR-GA-ID');
+      `,
+          }}
+        />
+      </head>
       <body className={inter.className}>
         <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+          attribute="data-theme"
+          defaultTheme="light"
+          enableSystem={false}
         >
           <Header />
           <main className="min-h-screen">{children}</main>

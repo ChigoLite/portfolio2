@@ -1,32 +1,21 @@
-import type { MetadataRoute } from "next"
+import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://chigolite.vercel.app/"
+  const baseUrl = "https://chigolite.vercel.app";
+  const pages = [
+    "", // Root
+    "#home",
+    "#about",
+    "#skills",
+    "#experience",
+    "#projects",
+    "#contact",
+  ];
 
-  return [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/#contact`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/services`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/#about`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-  ]
+  return pages.map((path) => ({
+    url: `${baseUrl}/${path}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: path === "" ? 1.0 : 0.8,
+  }));
 }

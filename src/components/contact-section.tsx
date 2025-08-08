@@ -1,215 +1,488 @@
 "use client";
 
 import type React from "react";
-
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Send,
+  Github,
+  Linkedin,
+  Twitter,
+  MessageCircle,
+  CheckCircle,
+  AlertCircle,
+  X,
+} from "lucide-react";
 import axios from "axios";
+
+interface FormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  subject?: string;
+  message?: string;
+}
+
+interface Toast {
+  title: string;
+  description: string;
+  variant?: "success" | "error";
+}
 
 export default function ContactSection() {
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
-  const [toast, setToast] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
     subject: "",
     message: "",
   });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [toast, setToast] = useState<Toast | null>(null);
+
+  // Debounced form validation
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      validateForm();
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [formData]);
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.subject.trim()) {
+      newErrors.subject = "Subject is required";
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = "Message is required";
+    } else if (formData.message.trim().length < 10) {
+      newErrors.message = "Message must be at least 10 characters long";
+    } else if (formData.message.trim().length > 500) {
+      newErrors.message = "Message must be under 500 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-  useEffect(() => {
-    if (toast) {
-      const interval = setInterval(() => {
-        setToast(false);
-      }, 3000);
-      return () => clearInterval(interval);
+
+    // Clear error when user starts typing
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
-  }, [toast]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      setToast({
+        title: "Form Error",
+        description: "Please fix the errors in the form before submitting.",
+        variant: "error",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const data = await axios.post("/pages/api", formData);
-      console.log(data);
-      setToast(true);
+      await axios.post("/pages/api", formData); // Updated to valid API route
+      setToast({
+        title: "Message Sent!",
+        description:
+          "Thank you for reaching out. I'll respond within 24 hours.",
+        variant: "success",
+      });
       setFormData({
         name: "",
         email: "",
         subject: "",
         message: "",
       });
-      setIsSubmitting(false);
     } catch (error) {
-      setIsSubmitting(false);
-
       console.error(error);
+      setToast({
+        title: "Failed to Send Message",
+        description: "Please try again or contact me directly via email.",
+        variant: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
   };
 
   const contactInfo = [
     {
-      icon: <Mail className="h-6 w-6 text-primary" />,
+      icon: Mail,
       title: "Email",
       value: "chrystnelson@gmail.com",
       link: "mailto:chrystnelson@gmail.com",
+      color: "text-blue-600",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-500/20",
+      description: "Reach out for project inquiries or collaborations.",
     },
     {
-      icon: <Phone className="h-6 w-6 text-primary" />,
+      icon: Phone,
       title: "Phone",
-      value: "+2349036315065",
+      value: "+234 903 631 5065",
       link: "tel:+2349036315065",
+      color: "text-green-600",
+      bgColor: "bg-green-500/10",
+      borderColor: "border-green-500/20",
+      description: "Available for calls during business hours (WAT).",
     },
     {
-      icon: <MapPin className="h-6 w-6 text-primary" />,
+      icon: MapPin,
       title: "Location",
-      value: "Enugu,Nigeria",
+      value: "Enugu, Nigeria",
       link: null,
+      color: "text-purple-600",
+      bgColor: "bg-purple-500/10",
+      borderColor: "border-purple-500/20",
+      description: "Based in the heart of Nigeria's tech hub.",
     },
   ];
 
+  const socialLinks = [
+    {
+      name: "GitHub",
+      icon: Github,
+      url: "https://github.com/ChigoLite",
+      color: "hover:text-gray-900 dark:hover:text-gray-100",
+      description: "Explore my open-source projects and contributions.",
+    },
+    {
+      name: "LinkedIn",
+      icon: Linkedin,
+      url: "https://www.linkedin.com/in/aka-cornelius-489835252",
+      color: "hover:text-blue-600",
+      description: "Connect for professional networking and opportunities.",
+    },
+    {
+      name: "Twitter",
+      icon: Twitter,
+      url: "https://x.com/aka_cornelius?t=TA0V2CInTVDwcIMQLyFkgg&s=09",
+      color: "hover:text-blue-400",
+      description: "Follow for tech insights and updates.",
+    },
+  ];
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 40 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.7,
+        ease: "easeOut",
+      },
+    },
+  };
+
   return (
-    <section id="contact" className="py-16">
-      <div className="container" ref={ref}>
+    <section
+      id="contact"
+      className="py-24 relative overflow-hidden bg-base-100"
+    >
+      {/* Background Elements */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl opacity-70" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/5 rounded-full blur-3xl opacity-70" />
+      </div>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg max-w-sm ${
+              toast.variant === "success"
+                ? "bg-green-500/90 text-white"
+                : "bg-red-500/90 text-white"
+            }`}
+            role="alert"
+          >
+            <div className="flex items-start gap-2">
+              {toast.variant === "success" ? (
+                <CheckCircle className="h-5 w-5 mt-0.5" />
+              ) : (
+                <AlertCircle className="h-5 w-5 mt-0.5" />
+              )}
+              <div>
+                <h4 className="font-semibold">{toast.title}</h4>
+                <p className="text-sm">{toast.description}</p>
+              </div>
+              <button
+                className="ml-auto p-1 hover:bg-white/20 rounded-full"
+                onClick={() => setToast(null)}
+                aria-label="Close notification"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8" ref={ref}>
+        {/* Section Header */}
         <motion.div
-          initial="hidden"
-          animate={inView ? "visible" : "hidden"}
-          variants={fadeIn}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
         >
-          <h2 className="text-3xl font-bold mb-4">Get In Touch</h2>
-          <div className="w-20 h-1 bg-primary mx-auto mb-6"></div>
-          <p className="max-w-2xl mx-auto text-muted-foreground">
-            Have a project in mind or want to discuss potential opportunities?
-            Feel free to reach out to me using the form below or through my
-            contact information.
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={
+              inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.85 }
+            }
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl mb-6 border border-primary/20"
+          >
+            <MessageCircle className="h-8 w-8 text-primary" />
+          </motion.div>
+
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            Let’s{" "}
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Connect
+            </span>
+          </h2>
+
+          <p className="max-w-3xl mx-auto text-lg text-base-content/70 leading-relaxed">
+            Ready to collaborate on your next project or explore new
+            opportunities? Reach out, and let’s build something extraordinary
+            together.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
-          <motion.div
-            initial="hidden"
-            animate={inView ? "visible" : "hidden"}
-            variants={fadeIn}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="lg:col-span-2"
-          >
-            <div>
-              <div className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+        >
+          {/* Contact Form */}
+          <motion.div variants={itemVariants} className="lg:col-span-2">
+            <div className="card bg-base-100 border border-base-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
+                    <Send className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-base-content">
+                    Send a Message
+                  </h3>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label htmlFor="name" className="text-sm font-medium">
-                        Your Name
+                      <label
+                        htmlFor="name"
+                        className="text-sm font-medium text-base-content"
+                      >
+                        Your Name *
                       </label>
                       <input
                         id="name"
                         name="name"
                         placeholder="John Doe"
-                        required
                         value={formData.name}
                         onChange={handleChange}
-                        className="input text-black dark:text-gray-100"
+                        className={`input input-bordered w-full bg-base-100 border-base-200 focus:border-primary focus:ring-primary/20 transition-all duration-200 ${
+                          errors.name
+                            ? "border-error focus:border-error focus:ring-error/20"
+                            : ""
+                        }`}
+                        aria-invalid={!!errors.name}
+                        aria-describedby={
+                          errors.name ? "name-error" : undefined
+                        }
                       />
+                      {errors.name && (
+                        <div
+                          id="name-error"
+                          className="flex items-center gap-1 text-sm text-error"
+                        >
+                          <AlertCircle className="h-4 w-4" />
+                          {errors.name}
+                        </div>
+                      )}
                     </div>
+
                     <div className="space-y-2">
-                      <label htmlFor="email" className="text-sm font-medium">
-                        Your Email
+                      <label
+                        htmlFor="email"
+                        className="text-sm font-medium text-base-content"
+                      >
+                        Your Email *
                       </label>
                       <input
                         id="email"
                         name="email"
                         type="email"
                         placeholder="john@example.com"
-                        required
                         value={formData.email}
                         onChange={handleChange}
-                        className="input text-black dark:text-gray-100"
+                        className={`input input-bordered w-full bg-base-100 border-base-200 focus:border-primary focus:ring-primary/20 transition-all duration-200 ${
+                          errors.email
+                            ? "border-error focus:border-error focus:ring-error/20"
+                            : ""
+                        }`}
+                        aria-invalid={!!errors.email}
+                        aria-describedby={
+                          errors.email ? "email-error" : undefined
+                        }
                       />
-                      <div className="validator-hint">
-                        Enter valid email address
+                      {errors.email && (
+                        <div
+                          id="email-error"
+                          className="flex items-center gap-1 text-sm text-error"
+                        >
+                          <AlertCircle className="h-4 w-4" />
+                          {errors.email}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="subject"
+                      className="text-sm font-medium text-base-content"
+                    >
+                      Subject *
+                    </label>
+                    <input
+                      id="subject"
+                      name="subject"
+                      placeholder="Project Inquiry"
+                      value={formData.subject}
+                      onChange={handleChange}
+                      className={`input input-bordered w-full bg-base-100 border-base-200 focus:border-primary focus:ring-primary/20 transition-all duration-200 ${
+                        errors.subject
+                          ? "border-error focus:border-error focus:ring-error/20"
+                          : ""
+                      }`}
+                      aria-invalid={!!errors.subject}
+                      aria-describedby={
+                        errors.subject ? "subject-error" : undefined
+                      }
+                    />
+                    {errors.subject && (
+                      <div
+                        id="subject-error"
+                        className="flex items-center gap-1 text-sm text-error"
+                      >
+                        <AlertCircle className="h-4 w-4" />
+                        {errors.subject}
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="subject" className="text-sm font-medium">
-                        Subject
-                      </label>
-                      <input
-                        id="subject"
-                        name="subject"
-                        placeholder="Project Inquiry"
-                        required
-                        value={formData.subject}
-                        onChange={handleChange}
-                        className="input text-black dark:text-gray-100"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="message" className="text-sm font-medium">
-                        Message
-                      </label>
-                      <input
-                        id="message"
-                        name="message"
-                        placeholder="Your message here..."
-                        required
-                        value={formData.message}
-                        onChange={handleChange}
-                        className="textarea text-black dark:text-gray-100"
-                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="message"
+                      className="text-sm font-medium text-base-content"
+                    >
+                      Message *
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      placeholder="Tell me about your project or inquiry..."
+                      rows={6}
+                      value={formData.message}
+                      onChange={handleChange}
+                      className={`textarea textarea-bordered w-full bg-base-100 border-base-200 focus:border-primary focus:ring-primary/20 resize-none transition-all duration-200 ${
+                        errors.message
+                          ? "border-error focus:border-error focus:ring-error/20"
+                          : ""
+                      }`}
+                      aria-invalid={!!errors.message}
+                      aria-describedby={
+                        errors.message ? "message-error" : undefined
+                      }
+                    />
+                    <div className="flex justify-between items-center">
+                      {errors.message && (
+                        <div
+                          id="message-error"
+                          className="flex items-center gap-1 text-sm text-error"
+                        >
+                          <AlertCircle className="h-4 w-4" />
+                          {errors.message}
+                        </div>
+                      )}
+                      <div className="text-xs text-base-content/60 ml-auto">
+                        {formData.message.length}/500 characters
+                      </div>
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full btn btn-secondary"
+                    className="btn btn-primary w-full shadow-lg hover:shadow-xl transition-all duration-300"
                     disabled={isSubmitting}
+                    aria-label="Submit contact form"
                   >
                     {isSubmitting ? (
-                      <span className="flex items-center">
-                        <svg
-                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
+                      <span className="flex items-center gap-2">
+                        <span className="loading loading-spinner loading-sm"></span>
                         Sending...
                       </span>
                     ) : (
-                      <span className="flex items-center">
-                        <Send className="mr-2 h-4 w-4" /> Send Message
+                      <span className="flex items-center gap-2">
+                        <Send className="h-4 w-4" />
+                        Send Message
                       </span>
                     )}
                   </button>
@@ -217,111 +490,115 @@ export default function ContactSection() {
               </div>
             </div>
           </motion.div>
-          {toast && (
-            <div className="toast toast-center toast-middle">
-              <div className="alert alert-success">
-                <span>
-                  Your Project Proposal Sent Successfully, We Would Get Back To
-                  You Shortly.
-                </span>
-              </div>
-            </div>
-          )}
 
-          <motion.div
-            initial="hidden"
-            animate={inView ? "visible" : "hidden"}
-            variants={fadeIn}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="h-full">
-              <div className="p-6 flex flex-col justify-between h-full">
-                <div>
-                  <h3 className="text-xl font-bold mb-6">
-                    Contact Information
-                  </h3>
-                  <div className="space-y-6">
-                    {contactInfo.map((item, index) => (
-                      <div key={index} className="flex items-start">
-                        <div className="mt-1 mr-4">{item.icon}</div>
-                        <div>
-                          <h4 className="font-medium">{item.title}</h4>
+          {/* Contact Information */}
+          <motion.div variants={itemVariants} className="space-y-6">
+            {/* Contact Info Card */}
+            <div className="card bg-base-100 border border-base-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="p-6">
+                <h3 className="text-xl font-semibold mb-6 flex items-center gap-2 text-base-content">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                  Contact Details
+                </h3>
+
+                <div className="space-y-4">
+                  {contactInfo.map((item, index) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={
+                          inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }
+                        }
+                        transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                        className="flex items-start gap-4 p-3 rounded-lg hover:bg-base-200/50 transition-colors"
+                      >
+                        <div
+                          className={`p-2 rounded-lg ${item.bgColor} border ${item.borderColor}`}
+                        >
+                          <IconComponent className={`h-5 w-5 ${item.color}`} />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-semibold text-base-content/60 uppercase tracking-wide">
+                            {item.title}
+                          </h4>
                           {item.link ? (
                             <a
                               href={item.link}
-                              className="text-muted-foreground hover:text-primary transition-colors"
+                              className="text-base-content hover:text-primary transition-colors font-medium"
+                              aria-label={`Contact via ${item.title}`}
                             >
                               {item.value}
                             </a>
                           ) : (
-                            <p className="text-muted-foreground">
+                            <p className="text-base-content font-medium">
                               {item.value}
                             </p>
                           )}
+                          <p className="text-xs text-base-content/60 mt-1">
+                            {item.description}
+                          </p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Social Links Card */}
+            <div className="card bg-base-100 border border-base-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="p-6">
+                <h3 className="text-xl font-semibold mb-6 text-base-content">
+                  Let’s Connect Online
+                </h3>
+
+                <div className="space-y-3">
+                  {socialLinks.map((social, index) => {
+                    const IconComponent = social.icon;
+                    return (
+                      <motion.a
+                        key={social.name}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={
+                          inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }
+                        }
+                        transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-base-200/50 transition-all duration-200 group"
+                        aria-label={`Visit ${social.name} profile`}
+                      >
+                        <div className="p-2 bg-base-200 rounded-lg group-hover:bg-base-200/80 transition-colors">
+                          <IconComponent
+                            className={`h-5 w-5 text-base-content/60 ${social.color} transition-colors`}
+                          />
+                        </div>
+                        <div>
+                          <span className="font-medium text-base-content group-hover:text-primary transition-colors">
+                            {social.name}
+                          </span>
+                          <p className="text-xs text-base-content/60">
+                            {social.description}
+                          </p>
+                        </div>
+                      </motion.a>
+                    );
+                  })}
                 </div>
 
-                <div className="mt-8">
-                  <h3 className="text-xl font-bold mb-4">Follow Me</h3>
-                  <div className="flex space-x-4">
-                    <a
-                      href="https://github.com/ChigoLite"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors"
-                    >
-                      <svg
-                        className="h-5 w-5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </a>
-                    <a
-                      href="https://www.linkedin.com/in/aka-cornelius-489835252"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors"
-                    >
-                      <svg
-                        className="h-5 w-5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                    </a>
-                    <a
-                      href="https://x.com/aka_cornelius?t=TA0V2CInTVDwcIMQLyFkgg&s=09"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors"
-                    >
-                      <svg
-                        className="h-5 w-5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                      </svg>
-                    </a>
+                <div className="mt-6 pt-6 border-t border-base-200">
+                  <div className="flex items-center gap-2 text-sm text-base-content/60">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span>Typically responds within 24 hours</span>
                   </div>
                 </div>
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
